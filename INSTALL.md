@@ -1,5 +1,27 @@
 # Instalação local no Linux
 
-1. Extraia o projeto.
-2. Abra `app/index.html` no navegador.
-3. A base de alunos deve permanecer local e não deve ser commitada no repositório público.
+## Opção A — abrir direto (mais simples)
+1. Extraia/clone o projeto.
+2. Clique duplo em `app/index.html` — ou rode:
+   `./launcher/Sorteador_EcoLeitor`
+
+## Opção B — atalho na Área de Trabalho (por usuário, sem sudo)
+```
+./scripts/instalar-desktop.sh
+# (legado equivalente: ./INSTALAR_DESKTOP.sh)
+```
+- Copia para `~/Sorteador_EcoLeitor` e cria `~/Desktop/Sorteador_EcoLeitor.desktop`.
+- Para confiar no atalho: clique com botão direito → “Permitir executar” (GNOME/Nemo marcam como confiável após `gio set ... trusted` automático quando disponível).
+
+## Opção C — pacote .deb (recomendado p/ distribuir sem dados)
+```
+./scripts/gerar-deb.sh 0.2.0
+sudo dpkg -i dist/sorteador-ecoleitor_0.2.0_all.deb
+sorteador-ecoleitor
+```
+- Instala em `/opt/sorteador-ecoleitor`, binário em `/usr/bin/sorteador-ecoleitor` e atalho em `/usr/share/applications`.
+
+## Lista de alunos (privacidade)
+- Guarde seu CSV real em `data/` ou só no navegador via “Importar CSV”.
+- Formato: `turma,nivel,nome` com cabeçalho.
+- Nunca commite nomes reais. Só `data/alunos.exemplo.csv` (fictício) vai para o Git.
