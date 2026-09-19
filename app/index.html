@@ -5,48 +5,38 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Sorteador EcoLeitor</title>
 <style>
-:root{--bg:#f5f7fa;--surface:#fff;--text:#182230;--muted:#718096;--line:#e3e8ef;--accent:#2563eb;--accent-soft:#eff6ff;--ok:#15803d}
+:root{--bg:#f6f7f9;--surface:#fff;--text:#17202a;--muted:#7a8491;--line:#e5e8ec;--accent:#2563eb}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-main{width:min(900px,calc(100% - 32px));margin:0 auto;padding:42px 0 56px}
-h1{font-size:30px;line-height:1.15;letter-spacing:-.03em;margin:0 0 28px;font-weight:750}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:16px;box-shadow:0 2px 10px rgba(15,23,42,.035)}
-.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-button{appearance:none;border:1px solid var(--line);background:#fff;color:var(--text);padding:11px 16px;border-radius:11px;font-size:15px;font-weight:600;cursor:pointer;transition:.15s}
-button:hover{border-color:#b9c4d2;background:#fafbfc}
-button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-button.primary:hover{filter:brightness(.96)}
-button:disabled{opacity:.5;cursor:not-allowed}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+main{width:min(760px,calc(100% - 28px));margin:auto;padding:48px 0}
+h1{font-size:28px;letter-spacing:-.03em;margin:0 0 34px;font-weight:750}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:14px}
+.dropzone{display:flex;align-items:center;justify-content:center;min-height:130px;border:2px dashed #cbd3dd;border-radius:14px;background:#fbfcfd;cursor:pointer;text-align:center}
+.dropzone:hover,.dropzone.drag{border-color:#8eb0ed;background:#f5f8ff}
+.dropzone strong{display:block;font-size:17px}
+.dropzone span{display:none}
 input[type=file]{display:none}
-.dropzone{display:flex;align-items:center;justify-content:center;min-height:150px;border:2px dashed #cbd5e1;border-radius:15px;background:#fafcff;cursor:pointer;text-align:center;transition:.15s}
-.dropzone:hover,.dropzone.drag{border-color:#93b4f4;background:var(--accent-soft)}
-.dropzone strong{display:block;font-size:17px;margin-bottom:5px}
-.dropzone span{font-size:14px;color:var(--muted)}
-.status{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;color:var(--muted);font-size:14px}
-.status strong{color:var(--text)}
-.actions{margin-top:14px}
-.notice,.ok{padding:11px 13px;border-radius:11px;margin-top:12px;font-size:14px}
-.notice{background:#fff7ed;color:#9a3412}.ok{background:#ecfdf5;color:#166534}
+.status{margin-top:10px;font-size:13px;color:var(--muted)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+button{border:1px solid var(--line);background:#fff;color:var(--text);padding:10px 15px;border-radius:10px;font-size:14px;font-weight:650;cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button:disabled{opacity:.45;cursor:not-allowed}
 .hidden{display:none!important}
-.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
-.metric{background:#f8fafc;border-radius:12px;padding:13px}
-.metric strong{display:block;font-size:22px;margin-top:2px}
-.metric span{color:var(--muted);font-size:12px}
-.result-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
-.result-header strong{font-size:17px}
-.result-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.group{border:1px solid var(--line);border-radius:13px;padding:14px;background:#fff}
-.group-title{font-weight:700;margin-bottom:9px}
-.student{padding:4px 0;color:#344054}
-.student label{display:flex;gap:8px;align-items:center}
-.badge{display:inline-block;padding:3px 8px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:12px}
-.small{font-size:13px}.muted{color:var(--muted)}
-#resultado table{width:100%;border-collapse:collapse}
-#resultado th,#resultado td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
-#resultado th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
-#previaXlsx{margin-top:14px}
-#previaXlsx .summary{grid-template-columns:repeat(4,1fr)}
-@media(max-width:680px){main{width:min(100% - 20px,900px);padding-top:28px}.result-grid{grid-template-columns:1fr}.summary,#previaXlsx .summary{grid-template-columns:1fr 1fr}.result-header{align-items:flex-start;flex-direction:column}}
+#erroImport,#erroXlsx{padding:10px;border-radius:10px;background:#fff4e8;color:#9a3412;font-size:13px;margin-top:10px}
+#previaXlsx{margin-top:10px}
+#previaXlsx .summary{display:none}
+#pvTabela{font-size:13px;margin-bottom:10px}
+#pvTabela table{width:100%;border-collapse:collapse}
+#pvTabela td,#pvTabela th{padding:7px;border-bottom:1px solid var(--line);text-align:left}
+#resultado{margin-top:4px}
+.result-actions{display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px}
+.group{padding:14px 0;border-bottom:1px solid var(--line)}
+.group:last-child{border-bottom:0}
+.group-title{font-weight:700;margin-bottom:7px}
+.student{display:inline-block;margin-right:18px;margin-bottom:3px}
+.badge{display:inline-block;padding:2px 7px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:11px}
+.muted{color:var(--muted)}
+@media(max-width:600px){main{padding:30px 0}.result-actions{justify-content:stretch}.result-actions button{flex:1}}
 </style>
 </head>
 <body>
@@ -103,6 +93,397 @@ input[type=file]{display:none}
 </div>
 <div id="resultado" class="muted">Carregue uma lista para começar.</div>
 </section>
+</main>
+<script src="vendor/xlsx.full.min.js"></script>
+<script src="xlsx-import.js"></script>
+<script>
+"use strict";
+/* Sorteador EcoLeitor v0.2 — lógica pedagógica núcleo preservada da v0.1.
+   Núcleo: até 2 alunos por (turma, nível). Amostra planejada != evidência.
+   Extensões v0.2: turmas dinâmicas, import CSV local, localStorage, rodízio semanal,
+   acompanhamento (manter amostra), checklist de evidência. Sem ranking/pontos. */
+const LS_ALUNOS = "ecoleitor.alunos.v1";
+const LS_HIST = "ecoleitor.historico.v1";   // { "2026-W38": [ {turma,nivel,elegiveis,selecionados:[...] } ] }
+const LS_EVID = "ecoleitor.evidencias.v1";  // { "SEMANA||TURMA||NIVEL||NOME": true }
+const ORDEM_NIVEIS = ["Pré-Silábico","Silábico s/ valor","Silábico c/ valor","Silábico-Alfabético","Alfabético"];
+
+let alunos = [];
+try { alunos = JSON.parse(localStorage.getItem(LS_ALUNOS) || "[]"); } catch(e){ alunos = []; }
+
+function embaralhar(lista){const a=[...lista];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function semanaISO(d=new Date()){
+  const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  const dia=(t.getUTCDay()+6)%7; t.setUTCDate(t.getUTCDate()-dia+3);
+  const primeiro=new Date(Date.UTC(t.getUTCFullYear(),0,4));
+  const pDia=(primeiro.getUTCDay()+6)%7; primeiro.setUTCDate(primeiro.getUTCDate()-pDia+3);
+  const sem=1+Math.round((t-primeiro)/(7*864e5));
+  return t.getUTCFullYear()+"-W"+String(sem).padStart(2,"0");
+}
+function getHist(){ try{return JSON.parse(localStorage.getItem(LS_HIST)||"{}");}catch(e){return{};} }
+function setHist(h){ localStorage.setItem(LS_HIST, JSON.stringify(h)); }
+function getEvid(){ try{return JSON.parse(localStorage.getItem(LS_EVID)||"{}");}catch(e){return{};} }
+function setEvid(e){ localStorage.setItem(LS_EVID, JSON.stringify(e)); }
+function salvarAlunos(){ localStorage.setItem(LS_ALUNOS, JSON.stringify(alunos)); }
+
+function turmasDetectadas(){
+  const s=[...new Set(alunos.map(a=>a.turma))];
+  s.sort((a,b)=>String(a).localeCompare(String(b),"pt-BR"));
+  return s;
+}
+function niveisDetectados(){
+  const presentes=[...new Set(alunos.map(a=>a.nivel))];
+  const conhecidos=ORDEM_NIVEIS.filter(n=>presentes.includes(n));
+  const novos=presentes.filter(n=>!ORDEM_NIVEIS.includes(n)).sort((a,b)=>String(a).localeCompare(String(b),"pt-BR"));
+  return [...conhecidos, ...novos];
+}
+function contagemSorteios(){
+  // conta aparições por nome+turma+nivel nas últimas 8 semanas
+  const h=getHist(), chaves=Object.keys(h).sort().slice(-8), cont={};
+  chaves.forEach(k=>(h[k]||[]).forEach(r=>(r.selecionados||[]).forEach(n=>{
+    const key=r.turma+"|||"+r.nivel+"|||"+n; cont[key]=(cont[key]||0)+1;
+  })));
+  return cont;
+}
+function sortear(manter=false){
+  const sem=semanaISO();
+  const h=getHist();
+  if(manter && h[sem] && h[sem].length){
+    renderizar(h[sem], sem, true);
+    return;
+  }
+  if(!alunos.length){
+    document.getElementById("resultado").innerHTML="<p>Nenhum aluno carregado. Importe um CSV local ou carregue o exemplo fictício.</p>";
+    return;
+  }
+  const grupos={};
+  alunos.forEach(a=>{const k=a.turma+"|||"+a.nivel;(grupos[k]=grupos[k]||[]).push(a.nome);});
+  const cont=contagemSorteios(), resultado=[];
+  turmasDetectadas().forEach(t=>niveisDetectados().forEach(n=>{
+    const elegiveis=grupos[t+"|||"+n]||[];
+    if(!elegiveis.length) return;
+    // rodízio: menor contagem primeiro, desempate por embaralhamento
+    const ordem=embaralhar(elegiveis).sort((x,y)=>{
+      const cx=cont[t+"|||"+n+"|||"+x]||0, cy=cont[t+"|||"+n+"|||"+y]||0;
+      return cx-cy;
+    });
+    resultado.push({turma:t, nivel:n, elegiveis:elegiveis.length, selecionados:ordem.slice(0,2)});
+  }));
+  h[sem]=resultado; setHist(h);
+  renderizar(resultado, sem, false);
+}
+function evKey(sem,turma,nivel,nome){ return sem+"||"+turma+"||"+nivel+"||"+nome; }
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+function renderizar(resultado, sem, reaproveitada){
+  window.ultimoResultado=resultado; window.ultimaSemana=sem;
+  const evid=getEvid();
+  let total=0,evCount=0,html="";
+  html+="<div class='muted' style='margin-bottom:10px'>"+esc(sem)+"</div>";
+  resultado.forEach(r=>{
+    total+=r.selecionados.length;
+    html+="<div class='group'><div class='group-title'>"+esc(r.turma)+" — "+esc(r.nivel)+"</div>";
+    r.selecionados.forEach(nome=>{
+      const k=evKey(sem,r.turma,r.nivel,nome),checked=evid[k]?"checked":"";
+      if(evid[k])evCount++;
+      html+="<div class='student'><label><input type='checkbox' data-ev='"+esc(k)+"' "+checked+"> "+esc(nome)+"</label></div>";
+    });
+    html+="</div>";
+  });
+  document.getElementById("resultado").innerHTML=html;
+  document.getElementById("mAmostra").textContent=total;
+  document.getElementById("mEv").textContent=evCount;
+  document.getElementById("mGrupos").textContent=resultado.length;
+  document.querySelectorAll("[data-ev]").forEach(cb=>cb.onchange=()=>{
+    const e=getEvid(); if(cb.checked)e[cb.getAttribute("data-ev")]=true;else delete e[cb.getAttribute("data-ev")];
+    setEvid(e); renderizar(window.ultimoResultado,window.ultimaSemana,reaproveitada);
+  });
+}
+function atualizarStatus(){
+  document.getElementById("mBase").textContent=alunos.length;
+  document.getElementById("semana").textContent=semanaISO();
+  const t=turmasDetectadas(), n=niveisDetectados();
+  document.getElementById("statusLista").innerHTML = alunos.length
+    ? "<strong>"+alunos.length+" alunos</strong> · "+t.length+" turma(s) ("+t.map(esc).join(", ")+") · "+n.length+" nível(is)."
+    : "Nenhuma lista carregada.";
+  const h=getHist(), sem=semanaISO();
+  if(h[sem] && h[sem].length && !window.ultimoResultado) renderizar(h[sem], sem, true);
+  else if(window.ultimoResultado) renderizar(window.ultimoResultado, window.ultimaSemana||sem, false);
+}
+function parseCSV(texto){
+  if(typeof texto!=="string"||!texto) return [];
+  // Guarda anti-binário: XLSX/ZIP lido como texto começa com "PK\x03\x04"
+  // e contém peças internas (Content_Types, xl/, sharedStrings...).
+  // Se detectado, recusa tudo — nunca vira "aluno".
+  if(contemAssinaturaBinaria(texto.slice(0,12000))) return [];
+  const linhas=texto.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  if(!linhas.length) return [];
+  // Se a primeira linha parece binária/XML de planilha, recusa.
+  if(contemAssinaturaBinaria(linhas.slice(0,3).join("\n"))) return [];
+  // detecta separador ; ou ,
+  const sep=(linhas[0].split(";").length>=linhas[0].split(",").length)?";":",";
+  let ini=0;
+  if(/turma/i.test(linhas[0]) && /n[ií]vel/i.test(linhas[0]) && /nome/i.test(linhas[0])) ini=1;
+  const out=[];
+  for(let i=ini;i<linhas.length;i++){
+    const linha=linhas[i];
+    if(contemAssinaturaBinaria(linha)) continue;
+    const partes=linha.split(sep).map(p=>sanitizarCampo(p.replace(/^"|"$/g,"")));
+    if(partes.length<3) continue;
+    const [turma,nivel,...resto]=partes, nome=sanitizarCampo(resto.join(" ").trim() || resto.join(sep));
+    if(!turma||!nivel||!nome) continue;
+    if(turma.length>40||nivel.length>60||nome.length>120) continue;
+    const junto=turma+" "+nivel+" "+nome;
+    if(contemAssinaturaBinaria(junto)) continue;
+    if(/[<>{}[\]\\=]/.test(junto)) continue; // XML/path-like não é nome de aluno
+    out.push({turma, nivel, nome});
+  }
+  return out;
+}
+/* ---- Fronteira XLSX -> texto puro (ponto central da correção) ----
+   Pipeline correto: XLSX -(parser dedicado)-> objetos {turma,nivel,nome}
+   -> sorteio -> gerarTextoAmostra() -> clipboard.writeText().
+   O arquivo/Blob/ArrayBuffer original JAMAIS chega ao clipboard.
+   Nesta versão só há parser CSV; XLSX é bloqueado na importação. */
+const ASSINATURAS_BINARIAS=["PK\x03\x04","PK\x05\x06","PK\x07\x08","[Content_Types].xml","xl/sharedStrings","xl/worksheets","xl/workbook","xl/_rels","docProps/","_rels/.rels"];
+const PADROES_PROIBIDOS_CLIPBOARD=[/PK\x03\x04/,/PK\x05\x06/,/xl\//,/\[Content_Types\]\.xml/,/sharedStrings\.xml/,/worksheets\//,/docProps\//];
+function contemAssinaturaBinaria(s){
+  if(typeof s!=="string"||!s) return false;
+  if(s.indexOf("\x00")!==-1) return true;
+  for(const a of ASSINATURAS_BINARIAS){ if(s.indexOf(a)!==-1) return true; }
+  return false;
+}
+function sanitizarCampo(s){
+  return String(s??"").replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g,"").replace(/\s+/g," ").trim().slice(0,120);
+}
+function gerarTextoAmostra(resultado, sem, evidMap){
+  // Entrada: objetos já sorteados. Saída: string UTF-8 legível. Nunca Blob/ArrayBuffer/File.
+  const ev=(evidMap&&typeof evidMap==="object")?evidMap:{};
+  const semana=sanitizarCampo(sem)||"semana";
+  let t="AMOSTRA ECOLEITOR — "+semana+"\nAmostra planejada (não é nota nem ranking).\n\n";
+  (Array.isArray(resultado)?resultado:[]).forEach(r=>{
+    const turma=sanitizarCampo(r.turma), nivel=sanitizarCampo(r.nivel);
+    const nomes=(Array.isArray(r.selecionados)?r.selecionados:[]).map(sanitizarCampo).filter(Boolean);
+    t+="Turma "+turma+" — "+nivel+":\n";
+    nomes.forEach(n=>{
+      const k=semana+"||"+turma+"||"+nivel+"||"+n;
+      t+=n+(ev[k]?" [evidência ok]":"")+"\n";
+    });
+    t+="\n";
+  });
+  return t;
+}
+function ehTextoSeguroParaClipboard(t){
+  if(typeof t!=="string"||!t) return false;
+  if(!t.includes("AMOSTRA ECOLEITOR")) return false;
+  for(const rx of PADROES_PROIBIDOS_CLIPBOARD){ if(rx.test(t)) return false; }
+  if(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(t)) return false;
+  if(t.includes("PK\x03\x04")) return false;
+  return true;
+}
+async function copiarTextoSeguro(t){
+  if(!ehTextoSeguroParaClipboard(t)) return {ok:false, motivo:"bloqueado-conteudo-binario"};
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(t);
+      return {ok:true, via:"writeText"};
+    }
+  }catch(e){ /* cai para fallback */ }
+  try{
+    const ta=document.createElement("textarea");
+    ta.value=t; ta.setAttribute("readonly",""); ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select();
+    const ok=document.execCommand("copy");
+    document.body.removeChild(ta);
+    return {ok:!!ok, via:"execCommand"};
+  }catch(e){ return {ok:false, motivo:"clipboard-indisponivel"}; }
+}
+
+document.getElementById("sortear").onclick=()=>sortear(false);
+document.getElementById("manter").onclick=()=>sortear(true);
+document.getElementById("copiar").onclick=async ()=>{
+  if(!window.ultimoResultado) sortear(false);
+  if(!window.ultimoResultado||!window.ultimoResultado.length) return;
+  const sem=window.ultimaSemana||semanaISO(), evid=getEvid();
+  // Somente string pura chega ao clipboard — nunca Blob/ArrayBuffer/File/objeto.
+  const t=gerarTextoAmostra(window.ultimoResultado, sem, evid);
+  const r=await copiarTextoSeguro(t);
+  if(!r.ok && r.motivo==="bloqueado-conteudo-binario"){
+    alert("Cópia bloqueada por segurança: o resultado contém conteúdo binário (parece XLSX/ZIP). Reimporte a lista como CSV UTF-8.");
+  } else if(!r.ok){
+    alert("Não foi possível copiar automaticamente. Selecione e copie manualmente.");
+  }
+};
+function mostrarErroImport(msg){
+  const el=document.getElementById("erroImport");
+  if(!el) return;
+  if(!msg){ el.style.display="none"; el.textContent=""; return; }
+  el.style.display="block"; el.textContent=msg;
+}
+document.getElementById("csv").onchange=(e)=>{
+  const f=e.target.files[0]; if(!f) return;
+  mostrarErroImport(null);
+  const nomeOriginal=(f.name||"");
+  const nome=nomeOriginal.toLowerCase();
+  // XLSX/XLS/ODS/ZIP: parser dedicado na seção 1B — aqui (CSV) bloqueia pelo nome.
+  if(/\.(xlsx|xlsm|xlsb|xls|ods|zip|rar|7z)$/.test(nome)){
+    mostrarErroImport("Arquivo “"+nomeOriginal+"” é planilha binária: use a seção 1B (Importar XLSX) abaixo. Aqui só entra CSV UTF-8 (turma,nivel,nome).");
+    e.target.value="";
+    return;
+  }
+  if(f.size>2*1024*1024){
+    mostrarErroImport("Arquivo muito grande (>2 MB). Exporte apenas as colunas turma,nivel,nome como CSV.");
+    e.target.value="";
+    return;
+  }
+  const r=new FileReader();
+  // readAsText SEMPRE (nunca ArrayBuffer) — e o conteúdo passa pela guarda binária.
+  r.onload=()=>{
+    const texto=String(r.result||"");
+    if(contemAssinaturaBinaria(texto.slice(0,12000))){
+      mostrarErroImport("O conteúdo parece ser XLSX/ZIP binário (assinatura PK / xl/ / Content_Types). Salve como CSV UTF-8 e tente de novo. Nada foi importado.");
+      e.target.value="";
+      return;
+    }
+    const lista=parseCSV(texto);
+    if(!lista.length){
+      mostrarErroImport("Nenhum aluno válido encontrado. Confira o cabeçalho turma,nivel,nome e o encoding UTF-8.");
+      e.target.value="";
+      return;
+    }
+    alunos=lista; salvarAlunos(); window.ultimoResultado=null; atualizarStatus();
+    e.target.value="";
+  };
+  r.onerror=()=>mostrarErroImport("Falha ao ler o arquivo. Tente novamente com CSV UTF-8.");
+  r.readAsText(f,"UTF-8");
+};
+/* ---- Importação XLSX (seção 1B): ArrayBuffer -> SheetJS -> objetos ----
+   O XLSX jamais passa por parseCSV()/readAsText() e jamais chega ao clipboard.
+   Só objetos {turma,nivel,nome} já sanitizados seguem para o sorteio. */
+let previaXlsx=null;
+function xlsxDisponivel(){ return (typeof EcoXlsx!=="undefined") && (typeof XLSX!=="undefined"); }
+function mostrarErroXlsx(msg){
+  const el=document.getElementById("erroXlsx");
+  if(!msg){ el.style.display="none"; el.textContent=""; return; }
+  el.style.display="block"; el.textContent=msg;
+}
+function atualizarStatusLib(){
+  const el=document.getElementById("xlsxLibStatus");
+  el.textContent=xlsxDisponivel()
+    ? "Leitor XLSX local ativo (SheetJS, offline)."
+    : "Leitor XLSX indisponível (app/vendor/xlsx.full.min.js ausente) — use CSV.";
+  document.getElementById("xlsx").disabled=!xlsxDisponivel();
+}
+document.getElementById("xlsx").onchange=(e)=>{
+  const f=e.target.files[0]; if(!f) return;
+  mostrarErroXlsx(null); previaXlsx=null;
+  document.getElementById("previaXlsx").style.display="none";
+  if(!xlsxDisponivel()){ mostrarErroXlsx("Biblioteca XLSX local ausente. Reinstale o projeto ou use CSV."); e.target.value=""; return; }
+  if(!/\.(xlsx|xlsm)$/i.test(f.name||"")){ mostrarErroXlsx("Envie um .xlsx (ou .xlsm). Para CSV, use a seção 1."); e.target.value=""; return; }
+  if(f.size>5*1024*1024){ mostrarErroXlsx("Arquivo muito grande (>5 MB)."); e.target.value=""; return; }
+  const r=new FileReader();
+  // ArrayBuffer de propósito: XLSX é binário e SÓ a SheetJS pode interpretá-lo.
+  r.onload=()=>{
+    let res;
+    try{ res=EcoXlsx.parseWorkbookXLSX(r.result, XLSX); }
+    catch(err){ mostrarErroXlsx("Falha ao interpretar o XLSX."); e.target.value=""; return; }
+    if(res.erro){ mostrarErroXlsx(res.erro); e.target.value=""; return; }
+    previaXlsx=res;
+    document.getElementById("pvTotal").textContent=res.total+(res.ignoradas?" (+ "+res.ignoradas+" linhas ignoradas)":"");
+    document.getElementById("pvTurmas").textContent=res.turmas.join(", ");
+    document.getElementById("pvNiveis").textContent=res.niveis.join(" · ");
+    document.getElementById("pvAba").textContent=res.aba+" / "+res.modo;
+    let htm="<table><thead><tr><th>Turma</th><th>Nível</th><th>Nome (prévia local)</th></tr></thead><tbody>";
+    res.preview.forEach(a=>{ htm+="<tr><td>"+esc(a.turma)+"</td><td>"+esc(a.nivel)+"</td><td>"+esc(a.nome)+"</td></tr>"; });
+    document.getElementById("pvTabela").innerHTML=htm+"</tbody></table><p class='muted small'>Prévia das 5 primeiras linhas — confira antes de confirmar. Nada sai deste computador.</p>";
+    document.getElementById("previaXlsx").style.display="block";
+    e.target.value="";
+  };
+  r.onerror=()=>mostrarErroXlsx("Falha ao ler o arquivo.");
+  r.readAsArrayBuffer(f);
+};
+document.getElementById("btnConfirmaXlsx").onclick=()=>{
+  if(!previaXlsx||!previaXlsx.alunos||!previaXlsx.alunos.length) return;
+  alunos=previaXlsx.alunos; salvarAlunos(); window.ultimoResultado=null;
+  previaXlsx=null; document.getElementById("previaXlsx").style.display="none";
+  mostrarErroImport(null); atualizarStatus();
+};
+document.getElementById("btnDescartaXlsx").onclick=()=>{
+  previaXlsx=null; document.getElementById("previaXlsx").style.display="none";
+};
+atualizarStatusLib();
+document.getElementById("btnExemplo").onclick=()=>{
+  alunos=[
+    {turma:"A",nivel:"Pré-Silábico",nome:"Ana Exemplo"},{turma:"A",nivel:"Pré-Silábico",nome:"Beto Exemplo"},
+    {turma:"A",nivel:"Pré-Silábico",nome:"Catarina Exemplo"},{turma:"A",nivel:"Silábico c/ valor",nome:"Diego Exemplo"},
+    {turma:"A",nivel:"Silábico c/ valor",nome:"Elisa Exemplo"},{turma:"A",nivel:"Alfabético",nome:"Fabio Exemplo"},
+    {turma:"B",nivel:"Pré-Silábico",nome:"Gabi Exemplo"},{turma:"B",nivel:"Silábico-Alfabético",nome:"Hugo Exemplo"},
+    {turma:"B",nivel:"Silábico-Alfabético",nome:"Iara Exemplo"},{turma:"B",nivel:"Alfabético",nome:"João Exemplo"},
+    {turma:"B",nivel:"Alfabético",nome:"Karla Exemplo"},{turma:"B",nivel:"Alfabético",nome:"Lucas Exemplo"}
+  ];
+  salvarAlunos(); window.ultimoResultado=null; atualizarStatus();
+};
+document.getElementById("btnLimpar").onclick=()=>{
+  if(!confirm("Apagar a lista local deste navegador?")) return;
+  alunos=[]; salvarAlunos(); window.ultimoResultado=null;
+  document.getElementById("resultado").textContent="Carregue sua lista local e execute o sorteio.";
+  atualizarStatus();
+};
+
+// Entrada única da interface: encaminha automaticamente para o leitor adequado.
+(function(){
+  const entrada=document.getElementById("arquivo"), zona=document.getElementById("dropzone");
+  function encaminhar(f){
+    if(!f) return;
+    const ext=(f.name||"").toLowerCase();
+    if(/\\.(xlsx|xlsm)$/.test(ext)){
+      const dt=new DataTransfer(); dt.items.add(f);
+      document.getElementById("xlsx").files=dt.files;
+      document.getElementById("xlsx").dispatchEvent(new Event("change",{bubbles:true}));
+    }else{
+      const dt=new DataTransfer(); dt.items.add(f);
+      document.getElementById("csv").files=dt.files;
+      document.getElementById("csv").dispatchEvent(new Event("change",{bubbles:true}));
+    }
+  }
+  entrada.onchange=()=>encaminhar(entrada.files[0]);
+  ["dragenter","dragover"].forEach(ev=>zona.addEventListener(ev,e=>{e.preventDefault();zona.classList.add("drag")}));
+  ["dragleave","drop"].forEach(ev=>zona.addEventListener(ev,e=>{e.preventDefault();zona.classList.remove("drag")}));
+  zona.addEventListener("drop",e=>encaminhar(e.dataTransfer.files[0]));
+})();
+atualizarStatus();
+</script></body></html><body><main>
+<h1>Sorteador EcoLeitor</h1>
+
+<section class="card" id="entradaCard">
+<label class="dropzone" id="dropzone" for="arquivo">
+<input type="file" id="arquivo" accept=".csv,.txt,.tsv,.xlsx,.xlsm">
+<div><strong>Enviar lista</strong><span>CSV ou Excel</span></div>
+</label>
+<div id="statusLista" class="status"></div>
+<div id="erroImport" class="hidden"></div>
+<div id="erroXlsx" class="hidden"></div>
+<input type="file" id="csv" accept=".csv,.txt,.tsv">
+<input type="file" id="xlsx" accept=".xlsx,.xlsm">
+<div id="previaXlsx" class="hidden">
+<div id="pvTabela"></div>
+<div class="actions"><button class="primary" id="btnConfirmaXlsx">Usar lista</button><button id="btnDescartaXlsx">Descartar</button></div>
+</div>
+<button id="btnExemplo" class="hidden">Exemplo</button>
+<button id="btnLimpar" class="hidden">Limpar</button>
+<span id="xlsxLibStatus" class="hidden"></span>
+</section>
+
+<section class="card hidden" id="rodizioCard">
+<div class="result-actions">
+<button class="primary" id="sortear">Gerar rodízio</button>
+<button id="manter">Manter</button>
+<button id="copiar">Copiar</button>
+</div>
+<div id="resultado" class="muted"></div>
+</section>
+<span id="semana" class="hidden"></span>
+<span id="mBase" class="hidden"></span><span id="mAmostra" class="hidden"></span><span id="mEv" class="hidden"></span><span id="mGrupos" class="hidden"></span>
 </main>
 <script src="vendor/xlsx.full.min.js"></script>
 <script src="xlsx-import.js"></script>
