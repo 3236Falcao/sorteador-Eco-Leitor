@@ -3,104 +3,106 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sorteador EcoLeitor v0.3</title>
+<title>Sorteador EcoLeitor</title>
 <style>
-body{font-family:Arial,sans-serif;background:#f4f6f8;color:#17202a;margin:0}
-main{max-width:1080px;margin:auto;padding:24px}
-.card{background:#fff;border:1px solid #d9dee7;border-radius:12px;padding:18px;margin-bottom:16px}
-h1{margin:0 0 6px}h2{margin:0 0 10px}
-.muted{color:#667085}.small{font-size:13px}
-.controls{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0;align-items:center}
-button{padding:11px 16px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;cursor:pointer;font-size:15px}
-button.primary{background:#2563eb;color:white;border-color:#2563eb}
-button:disabled{opacity:.55;cursor:not-allowed}
-table{width:100%;border-collapse:collapse}
-th,td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:left;vertical-align:top}th{background:#f8fafc}
-.badge{display:inline-block;padding:5px 8px;border-radius:999px;background:#eef2ff;margin:2px}
-.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
-.metric{background:#f8fafc;border-radius:8px;padding:12px}
-.metric strong{font-size:20px;display:block}
-.notice{padding:10px;border-radius:8px;background:#fff7ed;margin-top:12px}
-.ok{padding:10px;border-radius:8px;background:#ecfdf5;margin-top:12px}
-code{background:#f1f5f9;padding:2px 6px;border-radius:6px}
-input[type=file]{font-size:14px}
-label.ev{display:flex;gap:6px;align-items:center;margin:4px 0;font-size:14px}
-@media(max-width:720px){.summary{grid-template-columns:1fr 1fr}}
+:root{--bg:#f5f7fa;--surface:#fff;--text:#182230;--muted:#718096;--line:#e3e8ef;--accent:#2563eb;--accent-soft:#eff6ff;--ok:#15803d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{width:min(900px,calc(100% - 32px));margin:0 auto;padding:42px 0 56px}
+h1{font-size:30px;line-height:1.15;letter-spacing:-.03em;margin:0 0 28px;font-weight:750}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:16px;box-shadow:0 2px 10px rgba(15,23,42,.035)}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button{appearance:none;border:1px solid var(--line);background:#fff;color:var(--text);padding:11px 16px;border-radius:11px;font-size:15px;font-weight:600;cursor:pointer;transition:.15s}
+button:hover{border-color:#b9c4d2;background:#fafbfc}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{filter:brightness(.96)}
+button:disabled{opacity:.5;cursor:not-allowed}
+input[type=file]{display:none}
+.dropzone{display:flex;align-items:center;justify-content:center;min-height:150px;border:2px dashed #cbd5e1;border-radius:15px;background:#fafcff;cursor:pointer;text-align:center;transition:.15s}
+.dropzone:hover,.dropzone.drag{border-color:#93b4f4;background:var(--accent-soft)}
+.dropzone strong{display:block;font-size:17px;margin-bottom:5px}
+.dropzone span{font-size:14px;color:var(--muted)}
+.status{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;color:var(--muted);font-size:14px}
+.status strong{color:var(--text)}
+.actions{margin-top:14px}
+.notice,.ok{padding:11px 13px;border-radius:11px;margin-top:12px;font-size:14px}
+.notice{background:#fff7ed;color:#9a3412}.ok{background:#ecfdf5;color:#166534}
+.hidden{display:none!important}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.metric{background:#f8fafc;border-radius:12px;padding:13px}
+.metric strong{display:block;font-size:22px;margin-top:2px}
+.metric span{color:var(--muted);font-size:12px}
+.result-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.result-header strong{font-size:17px}
+.result-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.group{border:1px solid var(--line);border-radius:13px;padding:14px;background:#fff}
+.group-title{font-weight:700;margin-bottom:9px}
+.student{padding:4px 0;color:#344054}
+.student label{display:flex;gap:8px;align-items:center}
+.badge{display:inline-block;padding:3px 8px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:12px}
+.small{font-size:13px}.muted{color:var(--muted)}
+#resultado table{width:100%;border-collapse:collapse}
+#resultado th,#resultado td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+#resultado th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+#previaXlsx{margin-top:14px}
+#previaXlsx .summary{grid-template-columns:repeat(4,1fr)}
+@media(max-width:680px){main{width:min(100% - 20px,900px);padding-top:28px}.result-grid{grid-template-columns:1fr}.summary,#previaXlsx .summary{grid-template-columns:1fr 1fr}.result-header{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
-<body><main>
+<body>
+<main>
+<h1>Sorteador EcoLeitor</h1>
 
-<div class="card">
-<h1>Sorteador EcoLeitor <span class="muted small">v0.3</span></h1>
-<div class="muted">Amostra estratégica — <strong>até 2 alunos por nível em cada turma</strong>. Amostra planejada &ne; evidência coletada. Sem ranking, sem pontos de gamificação.</div>
-<div class="notice"><strong>Privacidade:</strong> a lista real de alunos fica <strong>somente neste computador</strong> (arquivo local + navegador). Nada é enviado para a internet. Não publique nomes de estudantes no GitHub.</div>
+<section class="card">
+<label class="dropzone" id="dropzone" for="arquivo">
+  <input type="file" id="arquivo" accept=".csv,.txt,.tsv,.xlsx,.xlsm">
+  <div>
+    <strong>Escolher lista de alunos</strong>
+    <span>CSV ou Excel · clique ou arraste o arquivo</span>
+  </div>
+</label>
+<div class="status">
+  <span id="statusLista">Nenhuma lista carregada.</span>
+  <span id="xlsxLibStatus"></span>
 </div>
+<div class="controls actions">
+  <button id="btnExemplo">Usar exemplo</button>
+  <button id="btnLimpar">Limpar</button>
+</div>
+<div id="erroImport" class="notice hidden"></div>
+<div id="erroXlsx" class="notice hidden"></div>
 
-<div class="card">
-<h2>1) Lista local de alunos — CSV</h2>
-<div class="muted small">Formato CSV com cabeçalho: <code>turma,nivel,nome</code> · Exemplo: <code>A,Alfabético,Maria Exemplo</code> · Tem planilha <code>.xlsx</code>? Use a seção 1B abaixo.</div>
-<div class="controls">
+<!-- entradas legadas mantidas apenas como ponte interna; não aparecem na interface -->
 <input type="file" id="csv" accept=".csv,.txt,.tsv">
-<button id="btnExemplo">Carregar exemplo fictício</button>
-<button id="btnLimpar">Limpar lista local</button>
-</div>
-<div id="statusLista" class="muted">Nenhuma lista carregada.</div>
-<div id="erroImport" class="notice" style="display:none"></div>
-<div class="small muted" style="margin-top:8px">Dica: guarde seu CSV real em <code>data/</code> (pasta ignorada pelo Git) ou apenas no navegador. O arquivo <code>data/alunos.exemplo.csv</code> contém só nomes fictícios.</div>
-</div>
-
-<div class="card">
-<h2>1B) Lista local de alunos — XLSX (100% local)</h2>
-<div class="muted small">A planilha é lida <strong>neste computador</strong> pela biblioteca SheetJS incluída no projeto (<code>app/vendor/</code>) — nada é enviado à internet. Formatos aceitos:<br>
-<strong>Padrão:</strong> colunas <code>turma | nivel | nome</code> (aceita <code>TURMA/Nível/NOME</code> etc.) · <strong>Blocos:</strong> <code>Turma A | Nível | Turma B | Nível | …</code> (turma sai do cabeçalho do bloco).</div>
-<div class="controls">
 <input type="file" id="xlsx" accept=".xlsx,.xlsm">
-<span id="xlsxLibStatus" class="muted small"></span>
+<div id="previaXlsx" class="hidden">
+  <div class="summary">
+    <div class="metric"><span>Alunos</span><strong id="pvTotal">0</strong></div>
+    <div class="metric"><span>Turmas</span><strong id="pvTurmas">—</strong></div>
+    <div class="metric"><span>Níveis</span><strong id="pvNiveis">—</strong></div>
+    <div class="metric"><span>Aba</span><strong id="pvAba">—</strong></div>
+  </div>
+  <div id="pvTabela"></div>
+  <div class="controls"><button class="primary" id="btnConfirmaXlsx">Usar lista</button><button id="btnDescartaXlsx">Descartar</button></div>
 </div>
-<div id="erroXlsx" class="notice" style="display:none"></div>
-<div id="previaXlsx" style="display:none">
+</section>
+
+<section class="card">
+<div class="result-header">
+  <strong>Amostra da semana <span id="semana" class="muted"></span></strong>
+  <div class="controls">
+    <button class="primary" id="sortear">Sortear</button>
+    <button id="manter">Manter</button>
+    <button id="copiar">Copiar</button>
+  </div>
+</div>
 <div class="summary">
-<div class="metric"><span class="muted small">Alunos</span><strong id="pvTotal">0</strong></div>
-<div class="metric"><span class="muted small">Turmas</span><strong id="pvTurmas">—</strong></div>
-<div class="metric"><span class="muted small">Níveis</span><strong id="pvNiveis">—</strong></div>
-<div class="metric"><span class="muted small">Aba / modo</span><strong id="pvAba">—</strong></div>
+  <div class="metric"><span>Alunos</span><strong id="mBase">0</strong></div>
+  <div class="metric"><span>Amostra</span><strong id="mAmostra">0</strong></div>
+  <div class="metric"><span>Evidências</span><strong id="mEv">0</strong></div>
 </div>
-<div id="pvTabela"></div>
-<div class="controls">
-<button class="primary" id="btnConfirmaXlsx">Confirmar importação</button>
-<button id="btnDescartaXlsx">Descartar</button>
-</div>
-</div>
-</div>
-
-<div class="card">
-<h2>2) Amostra semanal</h2>
-<div class="controls">
-<button class="primary" id="sortear">Sortear nova amostra (rodízio)</button>
-<button id="manter">Manter amostra da semana (acompanhar mesmos alunos)</button>
-<button id="copiar">Copiar resultado</button>
-</div>
-<div class="muted small">Semana atual: <span id="semana">—</span> · O rodízio prioriza quem foi menos sorteado nas últimas semanas. “Manter” reaproveita a amostra já sorteada nesta semana para acompanhamento longitudinal.</div>
-<div class="summary">
-<div class="metric"><span class="muted small">Alunos na base</span><strong id="mBase">0</strong></div>
-<div class="metric"><span class="muted small">Amostra planejada</span><strong id="mAmostra">0</strong></div>
-<div class="metric"><span class="muted small">Evidências coletadas</span><strong id="mEv">0</strong></div>
-<div class="metric"><span class="muted small">Grupos (turma+nível)</span><strong id="mGrupos">0</strong></div>
-</div>
-<div id="resultado">Carregue sua lista local e execute o sorteio.</div>
-<div class="ok"><strong>Regra pedagógica preservada:</strong> até 2 por nível/turma. Marque abaixo se a evidência foi <em>realmente</em> coletada — só isso conta como acompanhamento.</div>
-</div>
-
-<div class="card small muted">
-<h2 style="font-size:16px">Como funciona o rodízio</h2>
-<ol>
-<li>Agrupa por <strong>turma + nível</strong> (turmas detectadas automaticamente da lista).</li>
-<li>Conta quantas vezes cada aluno saiu nas últimas 8 semanas (histórico local).</li>
-<li>Ordena por menor contagem + embaralhamento e seleciona até 2.</li>
-<li>Salva o sorteio da semana; “Manter” evita novo sorteio para acompanhar os mesmos alunos.</li>
-</ol>
-</div>
-
+<div id="resultado" class="muted">Carregue uma lista para começar.</div>
+</section>
 </main>
 <script src="vendor/xlsx.full.min.js"></script>
 <script src="xlsx-import.js"></script>
