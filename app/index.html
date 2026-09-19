@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sorteador EcoLeitor</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f4f6f8;color:#17202a;margin:0}
+main{max-width:1050px;margin:auto;padding:24px}.card{background:#fff;border:1px solid #d9dee7;border-radius:12px;padding:18px;margin-bottom:16px}
+h1{margin:0 0 6px}.muted{color:#667085}.controls{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+button{padding:11px 16px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;cursor:pointer;font-size:15px}
+button.primary{background:#2563eb;color:white;border-color:#2563eb}table{width:100%;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:left;vertical-align:top}th{background:#f8fafc}
+.badge{display:inline-block;padding:5px 8px;border-radius:999px;background:#eef2ff;margin:2px}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.metric{background:#f8fafc;border-radius:8px;padding:12px}
+.notice{padding:10px;border-radius:8px;background:#fff7ed;margin-top:12px}
+@media(max-width:700px){.summary{grid-template-columns:1fr}}
+</style></head>
+<body><main>
+<div class="card"><h1>Sorteador EcoLeitor</h1>
+<div class="muted">Amostra estratégica — até 2 alunos por nível em cada turma</div>
+<div class="controls"><button class="primary" id="sortear">Sortear amostra do dia</button><button id="copiar">Copiar resultado</button></div>
+<div class="notice">A lista de alunos deve ser carregada localmente. Não publique nomes de estudantes em repositórios públicos.</div></div>
+<div class="card"><h2>Resultado</h2><div id="resultado">Carregue sua lista local e execute o sorteio.</div></div>
+</main>
+<script>
+/*
+  Dados reais devem permanecer em arquivo/local de uso privado.
+  Formato:
+  const alunos = [
+    {turma:"A", nivel:"Alfabético", nome:"Nome do aluno"}
+  ];
+*/
+const alunos = [];
+function embaralhar(lista){const a=[...lista];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function sortear(){
+ if(!alunos.length){document.getElementById("resultado").innerHTML="<p>Nenhum aluno carregado. Use uma cópia local com sua lista de alunos.</p>";return;}
+ const grupos={};alunos.forEach(a=>{const k=a.turma+"|||"+a.nivel;(grupos[k]??=[]).push(a.nome);});
+ const niveis=["Pré-Silábico","Silábico s/ valor","Silábico c/ valor","Silábico-Alfabético","Alfabético"],resultado=[];
+ ["A","B"].forEach(t=>niveis.forEach(n=>{const e=grupos[t+"|||"+n]||[];if(e.length)resultado.push({turma:t,nivel:n,elegiveis:e.length,selecionados:embaralhar(e).slice(0,2)});}));
+ let html="<p><strong>Amostra planejada: "+resultado.reduce((s,r)=>s+r.selecionados.length,0)+" alunos.</strong></p><table><thead><tr><th>Turma</th><th>Nível</th><th>Selecionados</th><th>Elegíveis</th></tr></thead><tbody>";
+ resultado.forEach(r=>html+="<tr><td>"+r.turma+"</td><td>"+r.nivel+"</td><td>"+r.selecionados.map(n=>"<span class='badge'>"+n+"</span>").join(" ")+"</td><td>"+r.elegiveis+"</td></tr>");
+ document.getElementById("resultado").innerHTML=html+"</tbody></table>";window.ultimoResultado=resultado;
+}
+document.getElementById("sortear").onclick=sortear;
+document.getElementById("copiar").onclick=()=>{if(!window.ultimoResultado)sortear();if(!window.ultimoResultado)return;let t="AMOSTRA ECOLEITOR — "+new Date().toLocaleDateString("pt-BR")+"\n\n";window.ultimoResultado.forEach(r=>t+="Turma "+r.turma+" — "+r.nivel+": "+r.selecionados.join(", ")+"\n");navigator.clipboard?.writeText(t);};
+</script></body></html>
