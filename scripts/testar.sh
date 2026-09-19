@@ -33,5 +33,11 @@ fi
 # garante que dados reais não seriam commitados
 git check-ignore -q data/lista-real.csv 2>/dev/null && ok ".gitignore cobre CSV real" || erro ".gitignore não cobre CSV real"
 git status --porcelain | grep -qi "Ana Exemplo" && erro "exemplo vazou no status?" || true
+# teste anti-binário do clipboard (falha se PK/xl/Content_Types vazar)
+if command -v node >/dev/null 2>&1; then
+  node scripts/testar-clipboard.js && ok "clipboard só-texto (anti-XLSX/ZIP)" || erro "clipboard anti-binário reprovado"
+else
+  echo "PULADO: node ausente p/ teste de clipboard"
+fi
 echo "---"
 if [ "$falhas" -eq 0 ]; then echo "TUDO OK"; else echo "$falhas FALHA(S)"; exit 1; fi

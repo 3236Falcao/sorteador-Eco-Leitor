@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sorteador EcoLeitor v0.2</title>
+<title>Sorteador EcoLeitor v0.2.1</title>
 <style>
 body{font-family:Arial,sans-serif;background:#f4f6f8;color:#17202a;margin:0}
 main{max-width:1080px;margin:auto;padding:24px}
@@ -31,20 +31,21 @@ label.ev{display:flex;gap:6px;align-items:center;margin:4px 0;font-size:14px}
 <body><main>
 
 <div class="card">
-<h1>Sorteador EcoLeitor <span class="muted small">v0.2</span></h1>
+<h1>Sorteador EcoLeitor <span class="muted small">v0.2.1</span></h1>
 <div class="muted">Amostra estratégica — <strong>até 2 alunos por nível em cada turma</strong>. Amostra planejada &ne; evidência coletada. Sem ranking, sem pontos de gamificação.</div>
 <div class="notice"><strong>Privacidade:</strong> a lista real de alunos fica <strong>somente neste computador</strong> (arquivo local + navegador). Nada é enviado para a internet. Não publique nomes de estudantes no GitHub.</div>
 </div>
 
 <div class="card">
 <h2>1) Lista local de alunos</h2>
-<div class="muted small">Formato CSV com cabeçalho: <code>turma,nivel,nome</code> · Exemplo: <code>A,Alfabético,Maria Exemplo</code></div>
+<div class="muted small">Formato CSV com cabeçalho: <code>turma,nivel,nome</code> · Exemplo: <code>A,Alfabético,Maria Exemplo</code> · XLSX ainda <strong>não</strong> é aceito aqui — salve a planilha como <strong>CSV UTF-8</strong>.</div>
 <div class="controls">
-<input type="file" id="csv" accept=".csv,.txt">
+<input type="file" id="csv" accept=".csv,.txt,.tsv">
 <button id="btnExemplo">Carregar exemplo fictício</button>
 <button id="btnLimpar">Limpar lista local</button>
 </div>
 <div id="statusLista" class="muted">Nenhuma lista carregada.</div>
+<div id="erroImport" class="notice" style="display:none"></div>
 <div class="small muted" style="margin-top:8px">Dica: guarde seu CSV real em <code>data/</code> (pasta ignorada pelo Git) ou apenas no navegador. O arquivo <code>data/alunos.exemplo.csv</code> contém só nomes fictícios.</div>
 </div>
 
@@ -196,39 +197,150 @@ function atualizarStatus(){
   else if(window.ultimoResultado) renderizar(window.ultimoResultado, window.ultimaSemana||sem, false);
 }
 function parseCSV(texto){
+  if(typeof texto!=="string"||!texto) return [];
+  // Guarda anti-binário: XLSX/ZIP lido como texto começa com "PK\x03\x04"
+  // e contém peças internas (Content_Types, xl/, sharedStrings...).
+  // Se detectado, recusa tudo — nunca vira "aluno".
+  if(contemAssinaturaBinaria(texto.slice(0,12000))) return [];
   const linhas=texto.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
   if(!linhas.length) return [];
+  // Se a primeira linha parece binária/XML de planilha, recusa.
+  if(contemAssinaturaBinaria(linhas.slice(0,3).join("\n"))) return [];
   // detecta separador ; ou ,
   const sep=(linhas[0].split(";").length>=linhas[0].split(",").length)?";":",";
   let ini=0;
   if(/turma/i.test(linhas[0]) && /n[ií]vel/i.test(linhas[0]) && /nome/i.test(linhas[0])) ini=1;
   const out=[];
   for(let i=ini;i<linhas.length;i++){
-    const partes=linhas[i].split(sep).map(p=>p.trim().replace(/^"|"$/g,""));
+    const linha=linhas[i];
+    if(contemAssinaturaBinaria(linha)) continue;
+    const partes=linha.split(sep).map(p=>sanitizarCampo(p.replace(/^"|"$/g,"")));
     if(partes.length<3) continue;
-    const [turma,nivel,...resto]=partes, nome=resto.join(" ").trim() || resto.join(sep);
+    const [turma,nivel,...resto]=partes, nome=sanitizarCampo(resto.join(" ").trim() || resto.join(sep));
     if(!turma||!nivel||!nome) continue;
+    if(turma.length>40||nivel.length>60||nome.length>120) continue;
+    const junto=turma+" "+nivel+" "+nome;
+    if(contemAssinaturaBinaria(junto)) continue;
+    if(/[<>{}[\]\\=]/.test(junto)) continue; // XML/path-like não é nome de aluno
     out.push({turma, nivel, nome});
   }
   return out;
 }
+/* ---- Fronteira XLSX -> texto puro (ponto central da correção) ----
+   Pipeline correto: XLSX -(parser dedicado)-> objetos {turma,nivel,nome}
+   -> sorteio -> gerarTextoAmostra() -> clipboard.writeText().
+   O arquivo/Blob/ArrayBuffer original JAMAIS chega ao clipboard.
+   Nesta versão só há parser CSV; XLSX é bloqueado na importação. */
+const ASSINATURAS_BINARIAS=["PK\x03\x04","PK\x05\x06","PK\x07\x08","[Content_Types].xml","xl/sharedStrings","xl/worksheets","xl/workbook","xl/_rels","docProps/","_rels/.rels"];
+const PADROES_PROIBIDOS_CLIPBOARD=[/PK\x03\x04/,/PK\x05\x06/,/xl\//,/\[Content_Types\]\.xml/,/sharedStrings\.xml/,/worksheets\//,/docProps\//];
+function contemAssinaturaBinaria(s){
+  if(typeof s!=="string"||!s) return false;
+  if(s.indexOf("\x00")!==-1) return true;
+  for(const a of ASSINATURAS_BINARIAS){ if(s.indexOf(a)!==-1) return true; }
+  return false;
+}
+function sanitizarCampo(s){
+  return String(s??"").replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g,"").replace(/\s+/g," ").trim().slice(0,120);
+}
+function gerarTextoAmostra(resultado, sem, evidMap){
+  // Entrada: objetos já sorteados. Saída: string UTF-8 legível. Nunca Blob/ArrayBuffer/File.
+  const ev=(evidMap&&typeof evidMap==="object")?evidMap:{};
+  const semana=sanitizarCampo(sem)||"semana";
+  let t="AMOSTRA ECOLEITOR — "+semana+"\nAmostra planejada (não é nota nem ranking).\n\n";
+  (Array.isArray(resultado)?resultado:[]).forEach(r=>{
+    const turma=sanitizarCampo(r.turma), nivel=sanitizarCampo(r.nivel);
+    const nomes=(Array.isArray(r.selecionados)?r.selecionados:[]).map(sanitizarCampo).filter(Boolean);
+    t+="Turma "+turma+" — "+nivel+":\n";
+    nomes.forEach(n=>{
+      const k=semana+"||"+turma+"||"+nivel+"||"+n;
+      t+=n+(ev[k]?" [evidência ok]":"")+"\n";
+    });
+    t+="\n";
+  });
+  return t;
+}
+function ehTextoSeguroParaClipboard(t){
+  if(typeof t!=="string"||!t) return false;
+  if(!t.includes("AMOSTRA ECOLEITOR")) return false;
+  for(const rx of PADROES_PROIBIDOS_CLIPBOARD){ if(rx.test(t)) return false; }
+  if(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(t)) return false;
+  if(t.includes("PK\x03\x04")) return false;
+  return true;
+}
+async function copiarTextoSeguro(t){
+  if(!ehTextoSeguroParaClipboard(t)) return {ok:false, motivo:"bloqueado-conteudo-binario"};
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(t);
+      return {ok:true, via:"writeText"};
+    }
+  }catch(e){ /* cai para fallback */ }
+  try{
+    const ta=document.createElement("textarea");
+    ta.value=t; ta.setAttribute("readonly",""); ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select();
+    const ok=document.execCommand("copy");
+    document.body.removeChild(ta);
+    return {ok:!!ok, via:"execCommand"};
+  }catch(e){ return {ok:false, motivo:"clipboard-indisponivel"}; }
+}
 
 document.getElementById("sortear").onclick=()=>sortear(false);
 document.getElementById("manter").onclick=()=>sortear(true);
-document.getElementById("copiar").onclick=()=>{
+document.getElementById("copiar").onclick=async ()=>{
   if(!window.ultimoResultado) sortear(false);
   if(!window.ultimoResultado||!window.ultimoResultado.length) return;
   const sem=window.ultimaSemana||semanaISO(), evid=getEvid();
-  let t="AMOSTRA ECOLEITOR — "+sem+"\nAmostra planejada (não é nota nem ranking).\n\n";
-  window.ultimoResultado.forEach(r=>{
-    t+="Turma "+r.turma+" — "+r.nivel+": "+r.selecionados.map(n=>n+(evid[evKey(sem,r.turma,r.nivel,n)]?" [evidência ok]":"")).join("; ")+"\n";
-  });
-  if(navigator.clipboard) navigator.clipboard.writeText(t);
+  // Somente string pura chega ao clipboard — nunca Blob/ArrayBuffer/File/objeto.
+  const t=gerarTextoAmostra(window.ultimoResultado, sem, evid);
+  const r=await copiarTextoSeguro(t);
+  if(!r.ok && r.motivo==="bloqueado-conteudo-binario"){
+    alert("Cópia bloqueada por segurança: o resultado contém conteúdo binário (parece XLSX/ZIP). Reimporte a lista como CSV UTF-8.");
+  } else if(!r.ok){
+    alert("Não foi possível copiar automaticamente. Selecione e copie manualmente.");
+  }
 };
+function mostrarErroImport(msg){
+  const el=document.getElementById("erroImport");
+  if(!el) return;
+  if(!msg){ el.style.display="none"; el.textContent=""; return; }
+  el.style.display="block"; el.textContent=msg;
+}
 document.getElementById("csv").onchange=(e)=>{
   const f=e.target.files[0]; if(!f) return;
+  mostrarErroImport(null);
+  const nomeOriginal=(f.name||"");
+  const nome=nomeOriginal.toLowerCase();
+  // XLSX/XLS/ODS/ZIP: sem parser dedicado nesta versão — bloqueia pelo nome.
+  if(/\.(xlsx|xlsm|xlsb|xls|ods|zip|rar|7z)$/.test(nome)){
+    mostrarErroImport("Arquivo “"+nomeOriginal+"” não aceito: XLSX/planilha binária ainda não é suportada. Salve como CSV UTF-8 (turma,nivel,nome) e importe novamente.");
+    e.target.value="";
+    return;
+  }
+  if(f.size>2*1024*1024){
+    mostrarErroImport("Arquivo muito grande (>2 MB). Exporte apenas as colunas turma,nivel,nome como CSV.");
+    e.target.value="";
+    return;
+  }
   const r=new FileReader();
-  r.onload=()=>{ alunos=parseCSV(String(r.result||"")); salvarAlunos(); window.ultimoResultado=null; atualizarStatus(); };
+  // readAsText SEMPRE (nunca ArrayBuffer) — e o conteúdo passa pela guarda binária.
+  r.onload=()=>{
+    const texto=String(r.result||"");
+    if(contemAssinaturaBinaria(texto.slice(0,12000))){
+      mostrarErroImport("O conteúdo parece ser XLSX/ZIP binário (assinatura PK / xl/ / Content_Types). Salve como CSV UTF-8 e tente de novo. Nada foi importado.");
+      e.target.value="";
+      return;
+    }
+    const lista=parseCSV(texto);
+    if(!lista.length){
+      mostrarErroImport("Nenhum aluno válido encontrado. Confira o cabeçalho turma,nivel,nome e o encoding UTF-8.");
+      e.target.value="";
+      return;
+    }
+    alunos=lista; salvarAlunos(); window.ultimoResultado=null; atualizarStatus();
+    e.target.value="";
+  };
+  r.onerror=()=>mostrarErroImport("Falha ao ler o arquivo. Tente novamente com CSV UTF-8.");
   r.readAsText(f,"UTF-8");
 };
 document.getElementById("btnExemplo").onclick=()=>{
