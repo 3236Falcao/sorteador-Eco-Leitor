@@ -20,3 +20,15 @@
 - Correção (sem mudar a regra até-2): (1) bloqueia `.xlsx/.xls/.ods/.zip` pelo nome + assinatura `PK`/`[Content_Types].xml`/`xl/`/`docProps/`/`\x00` no conteúdo, com mensagem “salve como CSV UTF-8”; (2) `parseCSV()` recusa binário e sanitiza campos (remove controles, limita tamanho, rejeita `<>{}[]\=`); (3) nova fronteira `gerarTextoAmostra()` pura (só strings) + `ehTextoSeguroParaClipboard()` que aborta a cópia se achar `PK`, `xl/`, `Content_Types`, `sharedStrings`, `worksheets`; (4) cópia via `writeText` com fallback `textarea+execCommand`, nunca `write()`/`Blob`/`ArrayBuffer`; (5) `readAsText` mantido, `readAsArrayBuffer` proibido no import.
 - Pipeline garantido: arquivo → texto validado → objetos `{turma,nivel,nome}` → sorteio → texto puro → clipboard. XLSX original nunca chega ao clipboard.
 - Testes: `scripts/testar-clipboard.js` (Node, sem deps) cobre CSV válido, XLSX simulado recusado, formato `AMOSTRA ECOLEITOR/Turma/nomes`, ausência de `PK`, `xl/`, `[Content_Types].xml`, `sharedStrings.xml`, `worksheets/`, e bloqueio de resultado contaminado; `scripts/testar.sh` passou a chamá-lo.
+
+## Importação XLSX local v0.3 (2026-09-19)
+- Motivação: a lista real (`lista geral.xlsx`) não podia ser usada sem quebrar a proteção anti-binário da v0.2.1.
+- Biblioteca: **SheetJS CE 0.18.5** (`xlsx.full.min.js`, Apache-2.0), **vendorizada** em `app/vendor/` (SHA-256 `c9506197…5d8623c99`, origem `cdn.jsdelivr.net/npm/xlsx@0.18.5`, reprodutível via `scripts/baixar-xlsx-lib.sh`). Motivo: parser ZIP+XML completo e testado, build UMD que roda em `file://` sem bundler e offline; ExcelJS exigiria bundling e é maior; parser manual seria frágil. Em execução, zero rede: sem CDN, sem servidor, 100% local.
+- Caminhos separados, sem mistura: CSV usa `readAsText→parseCSV`; XLSX usa `readAsArrayBuffer→XLSX.read(type:array)→EcoXlsx.parseWorkbookXLSX`. A guarda anti-binário da v0.2.1 foi mantida (assinatura ZIP, `PK`, `xl/`, `Content_Types`, `\x00`).
+- Primeira aba útil: ordena abas por (tem cabeçalho válido?, nº de linhas) — capa sem cabeçalho perde para a aba de dados.
+- Colunas (sem inventar): normaliza (minúsculas, sem acento, espaços) e aceita `turma|class|classe`, `nivel|level`, `nome|name|aluno|aluna|estudante`. Sem as 3 (ou sem bloco válido), erro claro com o formato esperado; nada é importado.
+- Layout em blocos (caso real `lista geral.xlsx`: `Turma A|Nível|Turma B|Nível`): cada bloco vira pares (nome, nível) com turma extraída do cabeçalho (`Turma A`→`A`, preservando caixa para compor com bases CSV). Extensão de leitura; regra até-2 inalterada.
+- Prévia obrigatória antes de confirmar: total, turmas, níveis e 5 primeiras linhas; confirmar/descartar explícitos.
+- Pipeline pós-parsing idêntico: objetos → mesma sanitização → sorteio → `gerarTextoAmostra()` → `ehTextoSeguroParaClipboard()` → `writeText()`. XLSX original jamais chega ao clipboard.
+- Regra pedagógica (até 2/turma+nível, sem ranking/pontos, evidência≠amostra, rodízio) intocada.
+- Teste real: `lista geral.xlsx` usado só localmente (50 alunos, turmas A/B, 19 grupos, amostra 27, 0 violações, texto sem `PK/xl/XML`); arquivo e nomes jamais commitados.

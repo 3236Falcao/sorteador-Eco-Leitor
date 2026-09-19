@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sorteador EcoLeitor v0.2.1</title>
+<title>Sorteador EcoLeitor v0.3</title>
 <style>
 body{font-family:Arial,sans-serif;background:#f4f6f8;color:#17202a;margin:0}
 main{max-width:1080px;margin:auto;padding:24px}
@@ -31,14 +31,14 @@ label.ev{display:flex;gap:6px;align-items:center;margin:4px 0;font-size:14px}
 <body><main>
 
 <div class="card">
-<h1>Sorteador EcoLeitor <span class="muted small">v0.2.1</span></h1>
+<h1>Sorteador EcoLeitor <span class="muted small">v0.3</span></h1>
 <div class="muted">Amostra estratégica — <strong>até 2 alunos por nível em cada turma</strong>. Amostra planejada &ne; evidência coletada. Sem ranking, sem pontos de gamificação.</div>
 <div class="notice"><strong>Privacidade:</strong> a lista real de alunos fica <strong>somente neste computador</strong> (arquivo local + navegador). Nada é enviado para a internet. Não publique nomes de estudantes no GitHub.</div>
 </div>
 
 <div class="card">
-<h2>1) Lista local de alunos</h2>
-<div class="muted small">Formato CSV com cabeçalho: <code>turma,nivel,nome</code> · Exemplo: <code>A,Alfabético,Maria Exemplo</code> · XLSX ainda <strong>não</strong> é aceito aqui — salve a planilha como <strong>CSV UTF-8</strong>.</div>
+<h2>1) Lista local de alunos — CSV</h2>
+<div class="muted small">Formato CSV com cabeçalho: <code>turma,nivel,nome</code> · Exemplo: <code>A,Alfabético,Maria Exemplo</code> · Tem planilha <code>.xlsx</code>? Use a seção 1B abaixo.</div>
 <div class="controls">
 <input type="file" id="csv" accept=".csv,.txt,.tsv">
 <button id="btnExemplo">Carregar exemplo fictício</button>
@@ -47,6 +47,30 @@ label.ev{display:flex;gap:6px;align-items:center;margin:4px 0;font-size:14px}
 <div id="statusLista" class="muted">Nenhuma lista carregada.</div>
 <div id="erroImport" class="notice" style="display:none"></div>
 <div class="small muted" style="margin-top:8px">Dica: guarde seu CSV real em <code>data/</code> (pasta ignorada pelo Git) ou apenas no navegador. O arquivo <code>data/alunos.exemplo.csv</code> contém só nomes fictícios.</div>
+</div>
+
+<div class="card">
+<h2>1B) Lista local de alunos — XLSX (100% local)</h2>
+<div class="muted small">A planilha é lida <strong>neste computador</strong> pela biblioteca SheetJS incluída no projeto (<code>app/vendor/</code>) — nada é enviado à internet. Formatos aceitos:<br>
+<strong>Padrão:</strong> colunas <code>turma | nivel | nome</code> (aceita <code>TURMA/Nível/NOME</code> etc.) · <strong>Blocos:</strong> <code>Turma A | Nível | Turma B | Nível | …</code> (turma sai do cabeçalho do bloco).</div>
+<div class="controls">
+<input type="file" id="xlsx" accept=".xlsx,.xlsm">
+<span id="xlsxLibStatus" class="muted small"></span>
+</div>
+<div id="erroXlsx" class="notice" style="display:none"></div>
+<div id="previaXlsx" style="display:none">
+<div class="summary">
+<div class="metric"><span class="muted small">Alunos</span><strong id="pvTotal">0</strong></div>
+<div class="metric"><span class="muted small">Turmas</span><strong id="pvTurmas">—</strong></div>
+<div class="metric"><span class="muted small">Níveis</span><strong id="pvNiveis">—</strong></div>
+<div class="metric"><span class="muted small">Aba / modo</span><strong id="pvAba">—</strong></div>
+</div>
+<div id="pvTabela"></div>
+<div class="controls">
+<button class="primary" id="btnConfirmaXlsx">Confirmar importação</button>
+<button id="btnDescartaXlsx">Descartar</button>
+</div>
+</div>
 </div>
 
 <div class="card">
@@ -78,6 +102,8 @@ label.ev{display:flex;gap:6px;align-items:center;margin:4px 0;font-size:14px}
 </div>
 
 </main>
+<script src="vendor/xlsx.full.min.js"></script>
+<script src="xlsx-import.js"></script>
 <script>
 "use strict";
 /* Sorteador EcoLeitor v0.2 — lógica pedagógica núcleo preservada da v0.1.
@@ -311,9 +337,9 @@ document.getElementById("csv").onchange=(e)=>{
   mostrarErroImport(null);
   const nomeOriginal=(f.name||"");
   const nome=nomeOriginal.toLowerCase();
-  // XLSX/XLS/ODS/ZIP: sem parser dedicado nesta versão — bloqueia pelo nome.
+  // XLSX/XLS/ODS/ZIP: parser dedicado na seção 1B — aqui (CSV) bloqueia pelo nome.
   if(/\.(xlsx|xlsm|xlsb|xls|ods|zip|rar|7z)$/.test(nome)){
-    mostrarErroImport("Arquivo “"+nomeOriginal+"” não aceito: XLSX/planilha binária ainda não é suportada. Salve como CSV UTF-8 (turma,nivel,nome) e importe novamente.");
+    mostrarErroImport("Arquivo “"+nomeOriginal+"” é planilha binária: use a seção 1B (Importar XLSX) abaixo. Aqui só entra CSV UTF-8 (turma,nivel,nome).");
     e.target.value="";
     return;
   }
@@ -343,6 +369,61 @@ document.getElementById("csv").onchange=(e)=>{
   r.onerror=()=>mostrarErroImport("Falha ao ler o arquivo. Tente novamente com CSV UTF-8.");
   r.readAsText(f,"UTF-8");
 };
+/* ---- Importação XLSX (seção 1B): ArrayBuffer -> SheetJS -> objetos ----
+   O XLSX jamais passa por parseCSV()/readAsText() e jamais chega ao clipboard.
+   Só objetos {turma,nivel,nome} já sanitizados seguem para o sorteio. */
+let previaXlsx=null;
+function xlsxDisponivel(){ return (typeof EcoXlsx!=="undefined") && (typeof XLSX!=="undefined"); }
+function mostrarErroXlsx(msg){
+  const el=document.getElementById("erroXlsx");
+  if(!msg){ el.style.display="none"; el.textContent=""; return; }
+  el.style.display="block"; el.textContent=msg;
+}
+function atualizarStatusLib(){
+  const el=document.getElementById("xlsxLibStatus");
+  el.textContent=xlsxDisponivel()
+    ? "Leitor XLSX local ativo (SheetJS, offline)."
+    : "Leitor XLSX indisponível (app/vendor/xlsx.full.min.js ausente) — use CSV.";
+  document.getElementById("xlsx").disabled=!xlsxDisponivel();
+}
+document.getElementById("xlsx").onchange=(e)=>{
+  const f=e.target.files[0]; if(!f) return;
+  mostrarErroXlsx(null); previaXlsx=null;
+  document.getElementById("previaXlsx").style.display="none";
+  if(!xlsxDisponivel()){ mostrarErroXlsx("Biblioteca XLSX local ausente. Reinstale o projeto ou use CSV."); e.target.value=""; return; }
+  if(!/\.(xlsx|xlsm)$/i.test(f.name||"")){ mostrarErroXlsx("Envie um .xlsx (ou .xlsm). Para CSV, use a seção 1."); e.target.value=""; return; }
+  if(f.size>5*1024*1024){ mostrarErroXlsx("Arquivo muito grande (>5 MB)."); e.target.value=""; return; }
+  const r=new FileReader();
+  // ArrayBuffer de propósito: XLSX é binário e SÓ a SheetJS pode interpretá-lo.
+  r.onload=()=>{
+    let res;
+    try{ res=EcoXlsx.parseWorkbookXLSX(r.result, XLSX); }
+    catch(err){ mostrarErroXlsx("Falha ao interpretar o XLSX."); e.target.value=""; return; }
+    if(res.erro){ mostrarErroXlsx(res.erro); e.target.value=""; return; }
+    previaXlsx=res;
+    document.getElementById("pvTotal").textContent=res.total+(res.ignoradas?" (+ "+res.ignoradas+" linhas ignoradas)":"");
+    document.getElementById("pvTurmas").textContent=res.turmas.join(", ");
+    document.getElementById("pvNiveis").textContent=res.niveis.join(" · ");
+    document.getElementById("pvAba").textContent=res.aba+" / "+res.modo;
+    let htm="<table><thead><tr><th>Turma</th><th>Nível</th><th>Nome (prévia local)</th></tr></thead><tbody>";
+    res.preview.forEach(a=>{ htm+="<tr><td>"+esc(a.turma)+"</td><td>"+esc(a.nivel)+"</td><td>"+esc(a.nome)+"</td></tr>"; });
+    document.getElementById("pvTabela").innerHTML=htm+"</tbody></table><p class='muted small'>Prévia das 5 primeiras linhas — confira antes de confirmar. Nada sai deste computador.</p>";
+    document.getElementById("previaXlsx").style.display="block";
+    e.target.value="";
+  };
+  r.onerror=()=>mostrarErroXlsx("Falha ao ler o arquivo.");
+  r.readAsArrayBuffer(f);
+};
+document.getElementById("btnConfirmaXlsx").onclick=()=>{
+  if(!previaXlsx||!previaXlsx.alunos||!previaXlsx.alunos.length) return;
+  alunos=previaXlsx.alunos; salvarAlunos(); window.ultimoResultado=null;
+  previaXlsx=null; document.getElementById("previaXlsx").style.display="none";
+  mostrarErroImport(null); atualizarStatus();
+};
+document.getElementById("btnDescartaXlsx").onclick=()=>{
+  previaXlsx=null; document.getElementById("previaXlsx").style.display="none";
+};
+atualizarStatusLib();
 document.getElementById("btnExemplo").onclick=()=>{
   alunos=[
     {turma:"A",nivel:"Pré-Silábico",nome:"Ana Exemplo"},{turma:"A",nivel:"Pré-Silábico",nome:"Beto Exemplo"},

@@ -36,8 +36,9 @@ git status --porcelain | grep -qi "Ana Exemplo" && erro "exemplo vazou no status
 # teste anti-binário do clipboard (falha se PK/xl/Content_Types vazar)
 if command -v node >/dev/null 2>&1; then
   node scripts/testar-clipboard.js && ok "clipboard só-texto (anti-XLSX/ZIP)" || erro "clipboard anti-binário reprovado"
+  node scripts/testar-xlsx.js && ok "importação XLSX local" || erro "importação XLSX reprovada"
 else
-  echo "PULADO: node ausente p/ teste de clipboard"
+  echo "PULADO: node ausente p/ testes de clipboard/xlsx"
 fi
 echo "---"
 if [ "$falhas" -eq 0 ]; then echo "TUDO OK"; else echo "$falhas FALHA(S)"; exit 1; fi

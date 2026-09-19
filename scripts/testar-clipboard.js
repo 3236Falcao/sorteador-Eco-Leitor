@@ -22,8 +22,19 @@ else erro("não usa clipboard.writeText");
 if (/navigator\.clipboard\s*\.\s*write\s*\(/.test(JS.replace(/writeText/g, ""))) erro("usa clipboard.write() genérico (aceita Blob) — proibido");
 else ok("não usa clipboard.write() genérico");
 
-if (/readAsArrayBuffer/.test(JS)) erro("usa FileReader.readAsArrayBuffer no fluxo de import — risco binário");
-else ok("sem readAsArrayBuffer no import (usa readAsText)");
+if (/new\s+Blob\s*\(/.test(JS)) erro("usa new Blob() no fluxo da página — risco binário no clipboard");
+else ok("sem new Blob() no fluxo da página");
+
+// readAsArrayBuffer é legítimo SOMENTE no caminho XLSX→SheetJS (nunca parseCSV).
+if (!/readAsText/.test(JS)) erro("CSV perdeu o readAsText");
+else ok("CSV usa readAsText (texto puro)");
+if (/readAsArrayBuffer/.test(JS)) {
+  let MOD = "";
+  try { MOD = fs.readFileSync(path.join(__dirname, "..", "app", "xlsx-import.js"), "utf-8"); } catch (e) { MOD = ""; }
+  if (/parseWorkbookXLSX/.test(JS) && !/parseCSV\(\s*r\.result/.test(JS) && /xlsxLib\.read/i.test(MOD)) {
+    ok("readAsArrayBuffer restrito ao caminho XLSX→SheetJS (nunca parseCSV)");
+  } else erro("readAsArrayBuffer fora do caminho XLSX dedicado — risco binário");
+} else ok("sem readAsArrayBuffer (só CSV)");
 
 if (!/contemAssinaturaBinaria/.test(JS)) erro("sem guarda contemAssinaturaBinaria");
 else ok("guarda anti-binária presente");

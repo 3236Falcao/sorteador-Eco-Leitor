@@ -22,6 +22,7 @@ sorteador-ecoleitor
 - Instala em `/opt/sorteador-ecoleitor`, binário em `/usr/bin/sorteador-ecoleitor` e atalho em `/usr/share/applications`.
 
 ## Lista de alunos (privacidade)
-- Guarde seu CSV real em `data/` ou só no navegador via “Importar CSV”.
-- Formato: `turma,nivel,nome` com cabeçalho.
-- Nunca commite nomes reais. Só `data/alunos.exemplo.csv` (fictício) vai para o Git.
+- Guarde seus arquivos reais fora do Git (`data/` é ignorado) ou só no navegador.
+- **CSV:** cabeçalho `turma,nivel,nome`, UTF-8.
+- **XLSX:** processado 100% localmente (SheetJS em `app/vendor/`, sem rede, sem servidor, sem CDN em execução). Colunas `turma|nivel|nome` ou blocos `Turma A|Nível|Turma B|Nível`; prévia antes de confirmar.
+- Nunca commite nomes reais nem a `lista geral.xlsx`. Só `data/alunos.exemplo.csv` (fictício) vai para o Git.
