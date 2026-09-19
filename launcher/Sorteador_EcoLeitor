@@ -1,3 +1,26 @@
 #!/bin/sh
-DIR="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
-exec xdg-open "$DIR/app/index.html"
+# Sorteador EcoLeitor — lançador Linux (compatível com repo, ~/Sorteador_EcoLeitor e /opt)
+set -eu
+abrir() {
+  f="$1"
+  if command -v xdg-open >/dev/null 2>&1; then exec xdg-open "$f"; fi
+  if command -v sensible-browser >/dev/null 2>&1; then exec sensible-browser "$f"; fi
+  if command -v python3 >/dev/null 2>&1; then
+    d="$(dirname -- "$f")"; b="$(basename -- "$f")"
+    cd -- "$d" && exec python3 -m http.server 8765 --bind 127.0.0.1 >/dev/null 2>&1 &
+    sleep 1
+    url="http://127.0.0.1:8765/$b"
+    if command -v xdg-open >/dev/null 2>&1; then xdg-open "$url"; else echo "Abra: $url"; fi
+    wait; exit 0
+  fi
+  echo "Não foi possível abrir $f automaticamente. Abra manualmente no navegador." >&2
+  exit 1
+}
+# 1) instalação .deb / /opt
+if [ -f "/opt/sorteador-ecoleitor/app/index.html" ]; then abrir "/opt/sorteador-ecoleitor/app/index.html"; fi
+# 2) mesmo diretório do script (repo ou $HOME/Sorteador_EcoLeitor)
+DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+if [ -f "$DIR/app/index.html" ]; then abrir "$DIR/app/index.html"; fi
+if [ -f "$DIR/../app/index.html" ]; then abrir "$DIR/../app/index.html"; fi
+echo "app/index.html não encontrado a partir de $DIR" >&2
+exit 1

@@ -2,9 +2,10 @@
 Version=1.0
 Type=Application
 Name=Sorteador EcoLeitor
-Comment=Sorteio estratégico de amostra do EcoLeitor
+Comment=Sorteio estratégico de amostra do EcoLeitor (até 2 por nível/turma, sem ranking)
 Exec=sorteador-ecoleitor
 TryExec=sorteador-ecoleitor
 Terminal=false
 Categories=Education;
-Keywords=sorteio;leitura;ecoleitor;
+Keywords=sorteio;leitura;ecoleitor;escola;
+StartupNotify=true

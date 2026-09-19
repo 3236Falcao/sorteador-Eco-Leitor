@@ -16,7 +16,7 @@ Name=Sorteador EcoLeitor
 Comment=Sorteio estratégico de amostra do EcoLeitor
 Exec=$BASE/Sorteador_EcoLeitor
 Terminal=false
-Categories=Education;Utility;
+Categories=Education;
 EOF
 chmod +x "$DESKTOP/Sorteador_EcoLeitor.desktop"
 echo "Instalado em $BASE"
