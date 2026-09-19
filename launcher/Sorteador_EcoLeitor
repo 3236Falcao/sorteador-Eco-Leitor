@@ -16,9 +16,7 @@ abrir() {
   echo "Não foi possível abrir $f automaticamente. Abra manualmente no navegador." >&2
   exit 1
 }
-# 1) instalação .deb / /opt
-if [ -f "/opt/sorteador-ecoleitor/app/index.html" ]; then abrir "/opt/sorteador-ecoleitor/app/index.html"; fi
-# 2) mesmo diretório do script (repo ou $HOME/Sorteador_EcoLeitor)
+# 1) mesmo diretório do script (repo ou $HOME/Sorteador_EcoLeitor)
 DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 if [ -f "$DIR/app/index.html" ]; then abrir "$DIR/app/index.html"; fi
 if [ -f "$DIR/../app/index.html" ]; then abrir "$DIR/../app/index.html"; fi
