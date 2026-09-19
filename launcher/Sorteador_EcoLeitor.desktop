@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Sorteador EcoLeitor
+Comment=Sorteio estratégico de amostra do EcoLeitor
+Exec=xdg-open /CAMINHO/PARA/Sorteador_EcoLeitor_2026.html
+Terminal=false
+Categories=Education;Utility;
