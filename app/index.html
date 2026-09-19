@@ -443,5 +443,27 @@ document.getElementById("btnLimpar").onclick=()=>{
   document.getElementById("resultado").textContent="Carregue sua lista local e execute o sorteio.";
   atualizarStatus();
 };
+
+// Entrada única da interface: encaminha automaticamente para o leitor adequado.
+(function(){
+  const entrada=document.getElementById("arquivo"), zona=document.getElementById("dropzone");
+  function encaminhar(f){
+    if(!f) return;
+    const ext=(f.name||"").toLowerCase();
+    if(/\\.(xlsx|xlsm)$/.test(ext)){
+      const dt=new DataTransfer(); dt.items.add(f);
+      document.getElementById("xlsx").files=dt.files;
+      document.getElementById("xlsx").dispatchEvent(new Event("change",{bubbles:true}));
+    }else{
+      const dt=new DataTransfer(); dt.items.add(f);
+      document.getElementById("csv").files=dt.files;
+      document.getElementById("csv").dispatchEvent(new Event("change",{bubbles:true}));
+    }
+  }
+  entrada.onchange=()=>encaminhar(entrada.files[0]);
+  ["dragenter","dragover"].forEach(ev=>zona.addEventListener(ev,e=>{e.preventDefault();zona.classList.add("drag")}));
+  ["dragleave","drop"].forEach(ev=>zona.addEventListener(ev,e=>{e.preventDefault();zona.classList.remove("drag")}));
+  zona.addEventListener("drop",e=>encaminhar(e.dataTransfer.files[0]));
+})();
 atualizarStatus();
 </script></body></html>
