@@ -1,7 +1,18 @@
-data/
+# Dados reais dos alunos — NUNCA versionar
+data/*
+!data/README.md
+!data/alunos.exemplo.csv
+!data/.gitkeep
 *.xlsx
 *.ods
 *.csv
+!data/alunos.exemplo.csv
 *.db
+alunos-reais*
+*alunos_reais*
+.env
 .DS_Store
 Thumbs.db
+# Build .deb
+build/
+*.deb

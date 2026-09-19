@@ -3,45 +3,250 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sorteador EcoLeitor</title>
+<title>Sorteador EcoLeitor v0.2</title>
 <style>
 body{font-family:Arial,sans-serif;background:#f4f6f8;color:#17202a;margin:0}
-main{max-width:1050px;margin:auto;padding:24px}.card{background:#fff;border:1px solid #d9dee7;border-radius:12px;padding:18px;margin-bottom:16px}
-h1{margin:0 0 6px}.muted{color:#667085}.controls{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+main{max-width:1080px;margin:auto;padding:24px}
+.card{background:#fff;border:1px solid #d9dee7;border-radius:12px;padding:18px;margin-bottom:16px}
+h1{margin:0 0 6px}h2{margin:0 0 10px}
+.muted{color:#667085}.small{font-size:13px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0;align-items:center}
 button{padding:11px 16px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;cursor:pointer;font-size:15px}
-button.primary{background:#2563eb;color:white;border-color:#2563eb}table{width:100%;border-collapse:collapse}
+button.primary{background:#2563eb;color:white;border-color:#2563eb}
+button:disabled{opacity:.55;cursor:not-allowed}
+table{width:100%;border-collapse:collapse}
 th,td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:left;vertical-align:top}th{background:#f8fafc}
 .badge{display:inline-block;padding:5px 8px;border-radius:999px;background:#eef2ff;margin:2px}
-.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.metric{background:#f8fafc;border-radius:8px;padding:12px}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
+.metric{background:#f8fafc;border-radius:8px;padding:12px}
+.metric strong{font-size:20px;display:block}
 .notice{padding:10px;border-radius:8px;background:#fff7ed;margin-top:12px}
-@media(max-width:700px){.summary{grid-template-columns:1fr}}
-</style></head>
+.ok{padding:10px;border-radius:8px;background:#ecfdf5;margin-top:12px}
+code{background:#f1f5f9;padding:2px 6px;border-radius:6px}
+input[type=file]{font-size:14px}
+label.ev{display:flex;gap:6px;align-items:center;margin:4px 0;font-size:14px}
+@media(max-width:720px){.summary{grid-template-columns:1fr 1fr}}
+</style>
+</head>
 <body><main>
-<div class="card"><h1>Sorteador EcoLeitor</h1>
-<div class="muted">Amostra estratégica — até 2 alunos por nível em cada turma</div>
-<div class="controls"><button class="primary" id="sortear">Sortear amostra do dia</button><button id="copiar">Copiar resultado</button></div>
-<div class="notice">A lista de alunos deve ser carregada localmente. Não publique nomes de estudantes em repositórios públicos.</div></div>
-<div class="card"><h2>Resultado</h2><div id="resultado">Carregue sua lista local e execute o sorteio.</div></div>
+
+<div class="card">
+<h1>Sorteador EcoLeitor <span class="muted small">v0.2</span></h1>
+<div class="muted">Amostra estratégica — <strong>até 2 alunos por nível em cada turma</strong>. Amostra planejada &ne; evidência coletada. Sem ranking, sem pontos de gamificação.</div>
+<div class="notice"><strong>Privacidade:</strong> a lista real de alunos fica <strong>somente neste computador</strong> (arquivo local + navegador). Nada é enviado para a internet. Não publique nomes de estudantes no GitHub.</div>
+</div>
+
+<div class="card">
+<h2>1) Lista local de alunos</h2>
+<div class="muted small">Formato CSV com cabeçalho: <code>turma,nivel,nome</code> · Exemplo: <code>A,Alfabético,Maria Exemplo</code></div>
+<div class="controls">
+<input type="file" id="csv" accept=".csv,.txt">
+<button id="btnExemplo">Carregar exemplo fictício</button>
+<button id="btnLimpar">Limpar lista local</button>
+</div>
+<div id="statusLista" class="muted">Nenhuma lista carregada.</div>
+<div class="small muted" style="margin-top:8px">Dica: guarde seu CSV real em <code>data/</code> (pasta ignorada pelo Git) ou apenas no navegador. O arquivo <code>data/alunos.exemplo.csv</code> contém só nomes fictícios.</div>
+</div>
+
+<div class="card">
+<h2>2) Amostra semanal</h2>
+<div class="controls">
+<button class="primary" id="sortear">Sortear nova amostra (rodízio)</button>
+<button id="manter">Manter amostra da semana (acompanhar mesmos alunos)</button>
+<button id="copiar">Copiar resultado</button>
+</div>
+<div class="muted small">Semana atual: <span id="semana">—</span> · O rodízio prioriza quem foi menos sorteado nas últimas semanas. “Manter” reaproveita a amostra já sorteada nesta semana para acompanhamento longitudinal.</div>
+<div class="summary">
+<div class="metric"><span class="muted small">Alunos na base</span><strong id="mBase">0</strong></div>
+<div class="metric"><span class="muted small">Amostra planejada</span><strong id="mAmostra">0</strong></div>
+<div class="metric"><span class="muted small">Evidências coletadas</span><strong id="mEv">0</strong></div>
+<div class="metric"><span class="muted small">Grupos (turma+nível)</span><strong id="mGrupos">0</strong></div>
+</div>
+<div id="resultado">Carregue sua lista local e execute o sorteio.</div>
+<div class="ok"><strong>Regra pedagógica preservada:</strong> até 2 por nível/turma. Marque abaixo se a evidência foi <em>realmente</em> coletada — só isso conta como acompanhamento.</div>
+</div>
+
+<div class="card small muted">
+<h2 style="font-size:16px">Como funciona o rodízio</h2>
+<ol>
+<li>Agrupa por <strong>turma + nível</strong> (turmas detectadas automaticamente da lista).</li>
+<li>Conta quantas vezes cada aluno saiu nas últimas 8 semanas (histórico local).</li>
+<li>Ordena por menor contagem + embaralhamento e seleciona até 2.</li>
+<li>Salva o sorteio da semana; “Manter” evita novo sorteio para acompanhar os mesmos alunos.</li>
+</ol>
+</div>
+
 </main>
 <script>
-/*
-  Dados reais devem permanecer em arquivo/local de uso privado.
-  Formato:
-  const alunos = [
-    {turma:"A", nivel:"Alfabético", nome:"Nome do aluno"}
-  ];
-*/
-const alunos = [];
+"use strict";
+/* Sorteador EcoLeitor v0.2 — lógica pedagógica núcleo preservada da v0.1.
+   Núcleo: até 2 alunos por (turma, nível). Amostra planejada != evidência.
+   Extensões v0.2: turmas dinâmicas, import CSV local, localStorage, rodízio semanal,
+   acompanhamento (manter amostra), checklist de evidência. Sem ranking/pontos. */
+const LS_ALUNOS = "ecoleitor.alunos.v1";
+const LS_HIST = "ecoleitor.historico.v1";   // { "2026-W38": [ {turma,nivel,elegiveis,selecionados:[...] } ] }
+const LS_EVID = "ecoleitor.evidencias.v1";  // { "SEMANA||TURMA||NIVEL||NOME": true }
+const ORDEM_NIVEIS = ["Pré-Silábico","Silábico s/ valor","Silábico c/ valor","Silábico-Alfabético","Alfabético"];
+
+let alunos = [];
+try { alunos = JSON.parse(localStorage.getItem(LS_ALUNOS) || "[]"); } catch(e){ alunos = []; }
+
 function embaralhar(lista){const a=[...lista];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-function sortear(){
- if(!alunos.length){document.getElementById("resultado").innerHTML="<p>Nenhum aluno carregado. Use uma cópia local com sua lista de alunos.</p>";return;}
- const grupos={};alunos.forEach(a=>{const k=a.turma+"|||"+a.nivel;(grupos[k]??=[]).push(a.nome);});
- const niveis=["Pré-Silábico","Silábico s/ valor","Silábico c/ valor","Silábico-Alfabético","Alfabético"],resultado=[];
- ["A","B"].forEach(t=>niveis.forEach(n=>{const e=grupos[t+"|||"+n]||[];if(e.length)resultado.push({turma:t,nivel:n,elegiveis:e.length,selecionados:embaralhar(e).slice(0,2)});}));
- let html="<p><strong>Amostra planejada: "+resultado.reduce((s,r)=>s+r.selecionados.length,0)+" alunos.</strong></p><table><thead><tr><th>Turma</th><th>Nível</th><th>Selecionados</th><th>Elegíveis</th></tr></thead><tbody>";
- resultado.forEach(r=>html+="<tr><td>"+r.turma+"</td><td>"+r.nivel+"</td><td>"+r.selecionados.map(n=>"<span class='badge'>"+n+"</span>").join(" ")+"</td><td>"+r.elegiveis+"</td></tr>");
- document.getElementById("resultado").innerHTML=html+"</tbody></table>";window.ultimoResultado=resultado;
+
+function semanaISO(d=new Date()){
+  const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  const dia=(t.getUTCDay()+6)%7; t.setUTCDate(t.getUTCDate()-dia+3);
+  const primeiro=new Date(Date.UTC(t.getUTCFullYear(),0,4));
+  const pDia=(primeiro.getUTCDay()+6)%7; primeiro.setUTCDate(primeiro.getUTCDate()-pDia+3);
+  const sem=1+Math.round((t-primeiro)/(7*864e5));
+  return t.getUTCFullYear()+"-W"+String(sem).padStart(2,"0");
 }
-document.getElementById("sortear").onclick=sortear;
-document.getElementById("copiar").onclick=()=>{if(!window.ultimoResultado)sortear();if(!window.ultimoResultado)return;let t="AMOSTRA ECOLEITOR — "+new Date().toLocaleDateString("pt-BR")+"\n\n";window.ultimoResultado.forEach(r=>t+="Turma "+r.turma+" — "+r.nivel+": "+r.selecionados.join(", ")+"\n");navigator.clipboard?.writeText(t);};
+function getHist(){ try{return JSON.parse(localStorage.getItem(LS_HIST)||"{}");}catch(e){return{};} }
+function setHist(h){ localStorage.setItem(LS_HIST, JSON.stringify(h)); }
+function getEvid(){ try{return JSON.parse(localStorage.getItem(LS_EVID)||"{}");}catch(e){return{};} }
+function setEvid(e){ localStorage.setItem(LS_EVID, JSON.stringify(e)); }
+function salvarAlunos(){ localStorage.setItem(LS_ALUNOS, JSON.stringify(alunos)); }
+
+function turmasDetectadas(){
+  const s=[...new Set(alunos.map(a=>a.turma))];
+  s.sort((a,b)=>String(a).localeCompare(String(b),"pt-BR"));
+  return s;
+}
+function niveisDetectados(){
+  const presentes=[...new Set(alunos.map(a=>a.nivel))];
+  const conhecidos=ORDEM_NIVEIS.filter(n=>presentes.includes(n));
+  const novos=presentes.filter(n=>!ORDEM_NIVEIS.includes(n)).sort((a,b)=>String(a).localeCompare(String(b),"pt-BR"));
+  return [...conhecidos, ...novos];
+}
+function contagemSorteios(){
+  // conta aparições por nome+turma+nivel nas últimas 8 semanas
+  const h=getHist(), chaves=Object.keys(h).sort().slice(-8), cont={};
+  chaves.forEach(k=>(h[k]||[]).forEach(r=>(r.selecionados||[]).forEach(n=>{
+    const key=r.turma+"|||"+r.nivel+"|||"+n; cont[key]=(cont[key]||0)+1;
+  })));
+  return cont;
+}
+function sortear(manter=false){
+  const sem=semanaISO();
+  const h=getHist();
+  if(manter && h[sem] && h[sem].length){
+    renderizar(h[sem], sem, true);
+    return;
+  }
+  if(!alunos.length){
+    document.getElementById("resultado").innerHTML="<p>Nenhum aluno carregado. Importe um CSV local ou carregue o exemplo fictício.</p>";
+    return;
+  }
+  const grupos={};
+  alunos.forEach(a=>{const k=a.turma+"|||"+a.nivel;(grupos[k]=grupos[k]||[]).push(a.nome);});
+  const cont=contagemSorteios(), resultado=[];
+  turmasDetectadas().forEach(t=>niveisDetectados().forEach(n=>{
+    const elegiveis=grupos[t+"|||"+n]||[];
+    if(!elegiveis.length) return;
+    // rodízio: menor contagem primeiro, desempate por embaralhamento
+    const ordem=embaralhar(elegiveis).sort((x,y)=>{
+      const cx=cont[t+"|||"+n+"|||"+x]||0, cy=cont[t+"|||"+n+"|||"+y]||0;
+      return cx-cy;
+    });
+    resultado.push({turma:t, nivel:n, elegiveis:elegiveis.length, selecionados:ordem.slice(0,2)});
+  }));
+  h[sem]=resultado; setHist(h);
+  renderizar(resultado, sem, false);
+}
+function evKey(sem,turma,nivel,nome){ return sem+"||"+turma+"||"+nivel+"||"+nome; }
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+function renderizar(resultado, sem, reaproveitada){
+  window.ultimoResultado=resultado; window.ultimaSemana=sem;
+  const evid=getEvid();
+  let total=0, evCount=0, html="";
+  html+="<p><strong>Amostra planejada ("+esc(sem)+"): "+resultado.reduce((s,r)=>s+r.selecionados.length,0)+" alunos.</strong>"+
+    (reaproveitada?" <span class='badge'>acompanhamento — mesmos alunos da semana</span>":" <span class='badge'>nova amostra com rodízio</span>")+"</p>";
+  html+="<table><thead><tr><th>Turma</th><th>Nível</th><th>Selecionados + evidência coletada?</th><th>Elegíveis</th></tr></thead><tbody>";
+  resultado.forEach((r,ri)=>{
+    total+=r.selecionados.length;
+    const cels=r.selecionados.map(nome=>{
+      const k=evKey(sem,r.turma,r.nivel,nome), checked=evid[k]?"checked":"";
+      if(evid[k]) evCount++;
+      return "<label class='ev'><input type='checkbox' data-ev='"+esc(k)+"' "+checked+"> <span class='badge'>"+esc(nome)+"</span></label>";
+    }).join("");
+    html+="<tr><td>"+esc(r.turma)+"</td><td>"+esc(r.nivel)+"</td><td>"+cels+"</td><td>"+r.elegiveis+"</td></tr>";
+  });
+  html+="</tbody></table>";
+  html+="<p class='muted small'>Marque a caixa somente quando a evidência for realmente coletada. Amostra planejada ≠ evidência coletada.</p>";
+  document.getElementById("resultado").innerHTML=html;
+  document.getElementById("mAmostra").textContent=total;
+  document.getElementById("mEv").textContent=evCount;
+  document.getElementById("mGrupos").textContent=resultado.length;
+  document.querySelectorAll("[data-ev]").forEach(cb=>cb.onchange=()=>{
+    const e=getEvid();
+    if(cb.checked) e[cb.getAttribute("data-ev")]=true; else delete e[cb.getAttribute("data-ev")];
+    setEvid(e); renderizar(window.ultimoResultado, window.ultimaSemana, reaproveitada);
+  });
+}
+function atualizarStatus(){
+  document.getElementById("mBase").textContent=alunos.length;
+  document.getElementById("semana").textContent=semanaISO();
+  const t=turmasDetectadas(), n=niveisDetectados();
+  document.getElementById("statusLista").innerHTML = alunos.length
+    ? "<strong>"+alunos.length+" alunos</strong> · "+t.length+" turma(s) ("+t.map(esc).join(", ")+") · "+n.length+" nível(is)."
+    : "Nenhuma lista carregada.";
+  const h=getHist(), sem=semanaISO();
+  if(h[sem] && h[sem].length && !window.ultimoResultado) renderizar(h[sem], sem, true);
+  else if(window.ultimoResultado) renderizar(window.ultimoResultado, window.ultimaSemana||sem, false);
+}
+function parseCSV(texto){
+  const linhas=texto.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  if(!linhas.length) return [];
+  // detecta separador ; ou ,
+  const sep=(linhas[0].split(";").length>=linhas[0].split(",").length)?";":",";
+  let ini=0;
+  if(/turma/i.test(linhas[0]) && /n[ií]vel/i.test(linhas[0]) && /nome/i.test(linhas[0])) ini=1;
+  const out=[];
+  for(let i=ini;i<linhas.length;i++){
+    const partes=linhas[i].split(sep).map(p=>p.trim().replace(/^"|"$/g,""));
+    if(partes.length<3) continue;
+    const [turma,nivel,...resto]=partes, nome=resto.join(" ").trim() || resto.join(sep);
+    if(!turma||!nivel||!nome) continue;
+    out.push({turma, nivel, nome});
+  }
+  return out;
+}
+
+document.getElementById("sortear").onclick=()=>sortear(false);
+document.getElementById("manter").onclick=()=>sortear(true);
+document.getElementById("copiar").onclick=()=>{
+  if(!window.ultimoResultado) sortear(false);
+  if(!window.ultimoResultado||!window.ultimoResultado.length) return;
+  const sem=window.ultimaSemana||semanaISO(), evid=getEvid();
+  let t="AMOSTRA ECOLEITOR — "+sem+"\nAmostra planejada (não é nota nem ranking).\n\n";
+  window.ultimoResultado.forEach(r=>{
+    t+="Turma "+r.turma+" — "+r.nivel+": "+r.selecionados.map(n=>n+(evid[evKey(sem,r.turma,r.nivel,n)]?" [evidência ok]":"")).join("; ")+"\n";
+  });
+  if(navigator.clipboard) navigator.clipboard.writeText(t);
+};
+document.getElementById("csv").onchange=(e)=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ alunos=parseCSV(String(r.result||"")); salvarAlunos(); window.ultimoResultado=null; atualizarStatus(); };
+  r.readAsText(f,"UTF-8");
+};
+document.getElementById("btnExemplo").onclick=()=>{
+  alunos=[
+    {turma:"A",nivel:"Pré-Silábico",nome:"Ana Exemplo"},{turma:"A",nivel:"Pré-Silábico",nome:"Beto Exemplo"},
+    {turma:"A",nivel:"Pré-Silábico",nome:"Catarina Exemplo"},{turma:"A",nivel:"Silábico c/ valor",nome:"Diego Exemplo"},
+    {turma:"A",nivel:"Silábico c/ valor",nome:"Elisa Exemplo"},{turma:"A",nivel:"Alfabético",nome:"Fabio Exemplo"},
+    {turma:"B",nivel:"Pré-Silábico",nome:"Gabi Exemplo"},{turma:"B",nivel:"Silábico-Alfabético",nome:"Hugo Exemplo"},
+    {turma:"B",nivel:"Silábico-Alfabético",nome:"Iara Exemplo"},{turma:"B",nivel:"Alfabético",nome:"João Exemplo"},
+    {turma:"B",nivel:"Alfabético",nome:"Karla Exemplo"},{turma:"B",nivel:"Alfabético",nome:"Lucas Exemplo"}
+  ];
+  salvarAlunos(); window.ultimoResultado=null; atualizarStatus();
+};
+document.getElementById("btnLimpar").onclick=()=>{
+  if(!confirm("Apagar a lista local deste navegador?")) return;
+  alunos=[]; salvarAlunos(); window.ultimoResultado=null;
+  document.getElementById("resultado").textContent="Carregue sua lista local e execute o sorteio.";
+  atualizarStatus();
+};
+atualizarStatus();
 </script></body></html>
